@@ -32,21 +32,135 @@ interface DoctorListProps {
   refreshKey: number;
   onRequestPrompt?: (prompt: string) => void;
   onDoctorsLoaded?: (doctors: Doctor[]) => void;
+  initialDoctors?: Doctor[];
 }
+
+const SPECIALIZATION_KEYWORDS: Record<string, string[]> = {
+  "General Medicine": [
+    "general medicine",
+    "general physician",
+    "physician",
+    "doctor",
+    "internist",
+    "fever",
+    "cold",
+    "cough",
+    "body pain",
+    "check-up",
+    "family medicine",
+    "gp",
+    "general",
+  ],
+  "Dermatology": [
+    "dermatology",
+    "dermatologist",
+    "skin",
+    "acne",
+    "rash",
+    "itching",
+    "hair",
+    "hair fall",
+    "derma",
+    "nail",
+    "allergy",
+  ],
+  "Pediatrics": [
+    "pediatrics",
+    "pediatrician",
+    "paediatrics",
+    "child",
+    "children",
+    "kids",
+    "infant",
+    "baby",
+    "vaccination",
+    "growth",
+  ],
+  "Orthopedics": [
+    "orthopedics",
+    "orthopedic",
+    "orthopedist",
+    "ortho",
+    "bone",
+    "joint",
+    "joint pain",
+    "knee",
+    "back pain",
+    "spine",
+    "fracture",
+    "neck pain",
+    "sports injury",
+  ],
+  "Cardiology": [
+    "cardiology",
+    "cardiologist",
+    "heart",
+    "cardiac",
+    "bp",
+    "high bp",
+    "chest pain",
+    "chest discomfort",
+    "palpitations",
+    "hypertension",
+  ],
+  "ENT": [
+    "ent",
+    "ear",
+    "nose",
+    "throat",
+    "sinus",
+    "hearing",
+    "sore throat",
+    "blocked nose",
+    "ear pain",
+    "otolaryngologist",
+  ],
+  "Ophthalmology": [
+    "ophthalmology",
+    "ophthalmologist",
+    "eye",
+    "eyes",
+    "vision",
+    "spectacles",
+    "glasses",
+    "blurred vision",
+    "red eye",
+    "optics",
+  ],
+  "Dental": [
+    "dental",
+    "dentist",
+    "teeth",
+    "tooth",
+    "tooth pain",
+    "cavity",
+    "gums",
+    "gum bleeding",
+    "braces",
+    "oral",
+    "cleaning",
+  ],
+};
 
 export default function DoctorList({
   refreshKey,
   onRequestPrompt,
   onDoctorsLoaded,
+  initialDoctors,
 }: DoctorListProps) {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [doctors, setDoctors] = useState<Doctor[]>(initialDoctors ?? []);
+  const [loading, setLoading] = useState(!initialDoctors || initialDoctors.length === 0);
   const [error, setError] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"experience" | "fee" | "slots">("slots");
 
   useEffect(() => {
+    if (initialDoctors && initialDoctors.length > 0 && refreshKey === 0) {
+      setDoctors(initialDoctors);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     fetch("/api/doctors")
       .then(async (res) => {
@@ -59,7 +173,7 @@ export default function DoctorList({
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Could not load doctors"))
       .finally(() => setLoading(false));
-  }, [refreshKey, onDoctorsLoaded]);
+  }, [refreshKey, onDoctorsLoaded, initialDoctors]);
 
   // Derive unique departments
   const departments = useMemo(() => {
@@ -72,12 +186,31 @@ export default function DoctorList({
       .filter((d) => {
         const matchesDept = selectedDept === "All" || d.department === selectedDept;
         const q = searchQuery.toLowerCase().trim();
+        if (!q) return matchesDept;
+
+        const docName = d.name.toLowerCase();
+        const docDept = d.department.toLowerCase();
+        const docQual = (d.qualification || "").toLowerCase();
+        const docRoom = (d.room || "").toLowerCase();
+        const docLangs = (d.languages || []).map((l) => l.toLowerCase());
+
+        const matchesName = docName.includes(q);
+        const matchesDepartment = docDept.includes(q);
+        const matchesQualification = docQual.includes(q);
+        const matchesRoom = docRoom.includes(q) || `room ${docRoom}`.includes(q);
+        const matchesLanguage = docLangs.some((l) => l.includes(q));
+
+        const keywords = SPECIALIZATION_KEYWORDS[d.department] || [];
+        const matchesKeyword = keywords.some((kw) => kw.includes(q) || q.includes(kw));
+
         const matchesSearch =
-          !q ||
-          d.name.toLowerCase().includes(q) ||
-          d.department.toLowerCase().includes(q) ||
-          d.languages.some((l) => l.toLowerCase().includes(q)) ||
-          d.qualification.toLowerCase().includes(q);
+          matchesName ||
+          matchesDepartment ||
+          matchesQualification ||
+          matchesRoom ||
+          matchesLanguage ||
+          matchesKeyword;
+
         return matchesDept && matchesSearch;
       })
       .sort((a, b) => {
@@ -178,10 +311,19 @@ export default function DoctorList({
             <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DDF5E9] text-[#299D78]">
               <Stethoscope className="h-6 w-6" />
             </div>
-            <p className="text-xs font-semibold text-[#172B2A]">No doctors match your criteria</p>
+            <p className="text-xs font-semibold text-[#172B2A]">No specialists found</p>
             <p className="mt-1 text-[11px] text-[#74827F]">
-              Try changing the department filter or clearing the search query.
+              Try searching with another name, department, or specialization.
             </p>
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedDept("All");
+              }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-[#B6E9D1] bg-[#D7F1E5] px-3.5 py-1.5 text-xs font-bold text-[#164D3C] hover:bg-[#B6E9D1] transition-all"
+            >
+              Clear search & show all doctors
+            </button>
           </div>
         )}
 

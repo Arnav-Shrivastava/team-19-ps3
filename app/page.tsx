@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import FallingLeaves from "@/components/FallingLeaves";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
@@ -23,7 +23,27 @@ export default function HomePage() {
   // Real data synced from child components
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState("");
+
+  const fetchDoctors = useCallback(async () => {
+    setDoctorsLoading(true);
+    setDoctorsError("");
+    try {
+      const res = await fetch("/api/doctors");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not load doctors");
+      setDoctors(data.doctors ?? []);
+    } catch (err) {
+      setDoctorsError(err instanceof Error ? err.message : "Could not load doctors");
+    } finally {
+      setDoctorsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors, refreshKey]);
 
   // Selected appointment for detail modal
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentData | null>(null);
@@ -158,6 +178,8 @@ export default function HomePage() {
           <DoctorDiscovery
             doctors={doctors}
             loading={doctorsLoading}
+            error={doctorsError}
+            onRetry={fetchDoctors}
             onBookWithDoctor={(doc) => {
               handleTriggerAIPrompt(
                 `I would like to book an appointment with ${doc.name} (${doc.department}) in Room ${doc.room}. What slots are free?`
@@ -183,6 +205,7 @@ export default function HomePage() {
               }}
               onAppointmentsLoaded={setAppointments}
               onDoctorsLoaded={setDoctors}
+              doctors={doctors}
               upcomingCount={upcomingAppointments.length}
             />
           </div>

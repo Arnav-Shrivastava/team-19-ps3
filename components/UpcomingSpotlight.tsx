@@ -52,11 +52,11 @@ export default function UpcomingSpotlight({
     );
   }
 
-  // Parse date into day and month for typographic block
+  // Parse date into day and month for typographic block with deterministic timezone
   const dateObj = new Date(appointment.slot_date);
   const dayNumber = appointment.slot_date.split("-")[2] || dateObj.getDate().toString();
-  const monthName = dateObj.toLocaleDateString("en-IN", { month: "short" });
-  const weekdayName = dateObj.toLocaleDateString("en-IN", { weekday: "long" });
+  const monthName = dateObj.toLocaleDateString("en-IN", { month: "short", timeZone: "Asia/Kolkata" });
+  const weekdayName = dateObj.toLocaleDateString("en-IN", { weekday: "long", timeZone: "Asia/Kolkata" });
 
   return (
     <section className="my-10 overflow-hidden rounded-3xl border border-[#B6E9D1] bg-gradient-to-br from-[#D7F1E5] via-[#FCFBF8] to-[#B6E9D1]/40 p-6 shadow-sm transition-all sm:p-8">

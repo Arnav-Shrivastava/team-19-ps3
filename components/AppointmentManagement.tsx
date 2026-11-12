@@ -19,6 +19,7 @@ interface AppointmentManagementProps {
   onSelectAppointment: (appointment: AppointmentData) => void;
   onAppointmentsLoaded?: (appointments: Appointment[]) => void;
   onDoctorsLoaded?: (doctors: Doctor[]) => void;
+  doctors?: Doctor[];
   upcomingCount?: number;
 }
 
@@ -28,6 +29,7 @@ export default function AppointmentManagement({
   onSelectAppointment,
   onAppointmentsLoaded,
   onDoctorsLoaded,
+  doctors,
   upcomingCount = 0,
 }: AppointmentManagementProps) {
   const [activeTab, setActiveTab] = useState<"appointments" | "doctors" | "doctor-day">("appointments");
@@ -107,6 +109,7 @@ export default function AppointmentManagement({
               refreshKey={refreshKey}
               onRequestPrompt={onRequestPrompt}
               onDoctorsLoaded={onDoctorsLoaded}
+              initialDoctors={doctors}
             />
           ) : (
             <DoctorDay refreshKey={refreshKey} />

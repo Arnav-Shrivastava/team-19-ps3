@@ -21,9 +21,14 @@ export default function HeroSection({
   onExploreAppointments,
   onMeetSpecialists,
 }: HeroSectionProps) {
-  // Time-aware greeting
+  // Time-aware greeting pinned to Asia/Kolkata timezone to avoid server/client hydration mismatch
   const greeting = useMemo(() => {
-    const hour = new Date().getHours();
+    const formatter = new Intl.DateTimeFormat("en-IN", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "Asia/Kolkata",
+    });
+    const hour = parseInt(formatter.format(new Date()), 10);
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
