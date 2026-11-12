@@ -123,19 +123,58 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
   );
 }
 
+/** Friendly labels so non-technical judges see what happened at a glance. */
+const TOOL_LABELS: Record<string, string> = {
+  getDepartments: "Checked departments",
+  searchDoctors: "Searched doctors",
+  getAvailableSlots: "Looked up free slots",
+  getMyAppointments: "Checked your appointments",
+  bookAppointment: "Booked appointment",
+  cancelAppointment: "Cancelled appointment",
+  rescheduleAppointment: "Rescheduled appointment",
+};
+
 /** Shows each tool call so users (and judges) can see what the agent did. */
 function ToolSteps({ steps }: { steps: AgentStep[] }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {steps.map((s, i) => (
-        <details key={i} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs">
-          <summary className="cursor-pointer select-none py-1 min-h-[40px] flex items-center flex-wrap gap-1 leading-normal">
-            <span className={s.ok ? "text-emerald-700" : "text-red-600"}>{s.ok ? "Done" : "Failed"}</span>
-            {" · "}
-            <span className="font-mono font-medium">{s.tool}</span>
-            {s.writes && <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">writes data</span>}
+        <details
+          key={i}
+          className={`rounded-lg border px-3 py-1.5 text-xs ${
+            s.ok
+              ? "border-slate-200 bg-slate-50"
+              : "border-red-200 bg-red-50"
+          }`}
+        >
+          <summary className="cursor-pointer select-none py-1 min-h-[40px] flex items-center flex-wrap gap-1.5 leading-normal">
+            {/* status icon */}
+            <span className={`inline-flex shrink-0 items-center justify-center rounded-full text-[10px] ${
+              s.ok ? "h-4 w-4 bg-emerald-100 text-emerald-700" : "h-4 w-4 bg-red-100 text-red-700"
+            }`}>
+              {s.ok ? "✓" : "✕"}
+            </span>
+
+            {/* friendly label or raw tool name */}
+            <span className="font-medium text-slate-700">
+              {TOOL_LABELS[s.tool] ?? s.tool}
+            </span>
+
+            {/* saved / error badge */}
+            {s.writes && s.ok && (
+              <span className="ml-auto shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                saved
+              </span>
+            )}
+            {!s.ok && (
+              <span className="ml-auto shrink-0 break-words rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                {s.error ? `Error: ${s.error}` : "Failed"}
+              </span>
+            )}
           </summary>
-          <pre className="mt-1 max-w-full overflow-x-auto whitespace-pre-wrap break-all text-slate-600">
+
+          {/* expandable raw payload for judges */}
+          <pre className="mt-1.5 max-w-full overflow-x-auto whitespace-pre-wrap break-all rounded bg-white/60 p-2 text-[11px] text-slate-600">
             {JSON.stringify({ args: s.args, ...(s.ok ? { result: s.result } : { error: s.error }) }, null, 2)}
           </pre>
         </details>
