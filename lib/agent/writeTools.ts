@@ -110,13 +110,18 @@ const cancelAppointment = defineTool({
     const sb = getSupabase();
     const { data: appt, error } = await sb
       .from("appointments")
-      .select("id, slot_id, status")
+      .select("id, slot_id, status, slots(slot_date, start_time)")
       .eq("id", appointment_id)
       .eq("patient_id", CURRENT_USER_ID)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!appt) throw new Error(`You have no appointment with id ${appointment_id}.`);
     if (appt.status !== "booked") throw new Error(`Appointment ${appointment_id} is already ${appt.status}, so it cannot be cancelled.`);
+
+    const currentSlot = one<Row>(appt.slots);
+    if (currentSlot && !isFutureSlot(currentSlot.slot_date, currentSlot.start_time)) {
+      throw new Error("That appointment time has already passed, so it cannot be changed.");
+    }
 
     const { error: updErr } = await sb
       .from("appointments")
@@ -142,21 +147,46 @@ const rescheduleAppointment = defineTool({
     const sb = getSupabase();
     const { data: appt, error } = await sb
       .from("appointments")
-      .select("id, slot_id, doctor_id, status")
+      .select("id, slot_id, doctor_id, status, slots(slot_date, start_time)")
       .eq("id", appointment_id)
       .eq("patient_id", CURRENT_USER_ID)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!appt) throw new Error(`You have no appointment with id ${appointment_id}.`);
     if (appt.status !== "booked") throw new Error(`Appointment ${appointment_id} is ${appt.status}, so it cannot be moved.`);
+
+    const currentSlot = one<Row>(appt.slots);
+    if (currentSlot && !isFutureSlot(currentSlot.slot_date, currentSlot.start_time)) {
+      throw new Error("That appointment time has already passed, so it cannot be changed.");
+    }
+
     if (appt.slot_id === new_slot_id) throw new Error("That is already your current slot.");
 
-    const { data: target, error: tErr } = await sb.from("slots").select("doctor_id").eq("id", new_slot_id).maybeSingle();
+    const { data: target, error: tErr } = await sb
+      .from("slots")
+      .select("doctor_id, slot_date, start_time")
+      .eq("id", new_slot_id)
+      .maybeSingle();
     if (tErr) throw new Error(tErr.message);
     if (!target) throw new Error(`Slot ${new_slot_id} does not exist.`);
     if (target.doctor_id !== appt.doctor_id) {
       throw new Error("Rescheduling keeps the same doctor. To change doctor, cancel this appointment and book a new one.");
     }
+
+    // Rule: the patient cannot hold two bookings at the same date and time.
+    const { data: mine, error: mineErr } = await sb
+      .from("appointments")
+      .select("id, slots(slot_date, start_time)")
+      .eq("patient_id", CURRENT_USER_ID)
+      .eq("status", "booked")
+      .neq("id", appointment_id);
+    if (mineErr) throw new Error(mineErr.message);
+
+    const clash = (mine as Row[]).some((a) => {
+      const s = one<Row>(a.slots);
+      return s && s.slot_date === target.slot_date && hhmm(s.start_time) === hhmm(target.start_time);
+    });
+    if (clash) throw new Error("You already have an appointment at that date and time.");
 
     const slot = await claimSlot(new_slot_id);
     const { error: updErr } = await sb.from("appointments").update({ slot_id: new_slot_id }).eq("id", appointment_id);
