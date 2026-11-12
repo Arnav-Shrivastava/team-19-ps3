@@ -13,8 +13,8 @@ Patients of a multi-speciality clinic call the front desk just to book, move or 
 - Never diagnoses or suggests medicine; it only helps with booking
 
 ## Live demo
-- Vercel link: <PASTE VERCEL LINK>
-- Passcode: <PASTE APP_PASSCODE>
+- Vercel link: https://careslot-clinic-appointment-agent.vercel.app/
+- Passcode: Shawarma
 - Try this prompt: "I have a skin rash, book me with a doctor on Friday morning."
 
 ## Agent tools
