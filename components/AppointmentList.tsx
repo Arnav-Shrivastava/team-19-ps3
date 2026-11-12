@@ -22,6 +22,7 @@ const BADGE: Record<string, string> = {
 /* Owner: Frontend member. Reads GET /api/appointments, reloads when refreshKey changes and every 5 seconds. */
 export default function AppointmentList({ refreshKey }: { refreshKey: number }) {
   const [items, setItems] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function AppointmentList({ refreshKey }: { refreshKey: number }) 
         }
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : "Could not load appointments");
+      } finally {
+        if (alive) setLoading(false);
       }
     }
     load();
@@ -49,26 +52,28 @@ export default function AppointmentList({ refreshKey }: { refreshKey: number }) 
 
   return (
     <ul className="divide-y divide-slate-100">
-      {error && <li className="p-4 text-sm text-red-600">{error}</li>}
-      {!error && items.length === 0 && <li className="p-4 text-sm text-slate-500">No appointments yet.</li>}
-      {items.map((a) => (
-        <li key={a.id} className="flex items-start justify-between gap-2 px-4 py-3 text-sm">
-          <div className="min-w-0">
-            <p className="font-medium">{a.doctor_name}</p>
-            <p className="text-xs text-slate-500">
-              {a.department} · Room {a.room}
-            </p>
-            <p className="text-xs text-slate-700">
-              {a.slot_date} at {a.start_time}
-            </p>
-            {a.reason && <p className="truncate text-xs text-slate-500">{a.reason}</p>}
-            <p className="text-xs text-slate-400">Appointment #{a.id}</p>
-          </div>
-          <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${BADGE[a.status] ?? "bg-slate-100 text-slate-700"}`}>
-            {a.status}
-          </span>
-        </li>
-      ))}
+      {error && <li className="p-4 text-sm text-red-600 break-words">{error}</li>}
+      {!error && loading && <li className="p-4 text-sm text-slate-500">Loading appointments...</li>}
+      {!error && !loading && items.length === 0 && <li className="p-4 text-sm text-slate-500">No appointments yet.</li>}
+      {!loading &&
+        items.map((a) => (
+          <li key={a.id} className="flex items-start justify-between gap-2 px-4 py-3 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium break-words">{a.doctor_name}</p>
+              <p className="text-xs text-slate-500 break-words">
+                {a.department} · Room {a.room}
+              </p>
+              <p className="text-xs text-slate-700">
+                {a.slot_date} at {a.start_time}
+              </p>
+              {a.reason && <p className="text-xs text-slate-500 break-words">{a.reason}</p>}
+              <p className="text-xs text-slate-400">Appointment #{a.id}</p>
+            </div>
+            <span className={`shrink-0 rounded px-2 py-0.5 text-xs ${BADGE[a.status] ?? "bg-slate-100 text-slate-700"}`}>
+              {a.status}
+            </span>
+          </li>
+        ))}
     </ul>
   );
 }
