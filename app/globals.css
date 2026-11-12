@@ -1,5 +1,205 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+:root {
+  --forest-green: #164D3C;
+  --primary-green: #209B73;
+  --emerald: #32B58B;
+  --light-mint: #D7F1E5;
+  --fresh-mint: #B6E9D1;
+  --soft-pink: #F5D5E3;
+  --baby-pink: #F9E8EF;
+  --rose-accent: #D879A1;
+  --warm-ivory: #FCFBF8;
+  --dark-text: #172D29;
+  --secondary-text: #75847F;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  background-color: #FCFBF8;
+  color: #172D29;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .font-editorial {
+  font-family: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Falling Leaves Animation Physics */
+.leaf-particle {
+  position: fixed;
+  top: -80px;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform, opacity;
+}
+
+.leaf-sway-1 {
+  animation: leafFloat1 linear infinite;
+}
+
+.leaf-sway-2 {
+  animation: leafFloat2 linear infinite;
+}
+
+.leaf-sway-3 {
+  animation: leafFloat3 linear infinite;
+}
+
+@keyframes leafFloat1 {
+  0% {
+    top: -70px;
+    transform: translateX(0px) rotate(0deg) rotateY(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  35% {
+    transform: translateX(45px) rotate(60deg) rotateY(180deg);
+  }
+  65% {
+    transform: translateX(-30px) rotate(-30deg) rotateY(360deg);
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    top: 106vh;
+    transform: translateX(40px) rotate(90deg) rotateY(540deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leafFloat2 {
+  0% {
+    top: -70px;
+    transform: translateX(0px) rotate(0deg) rotateY(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  40% {
+    transform: translateX(-50px) rotate(-45deg) rotateY(180deg);
+  }
+  70% {
+    transform: translateX(30px) rotate(40deg) rotateY(360deg);
+  }
+  90% {
+    opacity: 0.65;
+  }
+  100% {
+    top: 106vh;
+    transform: translateX(-35px) rotate(-80deg) rotateY(540deg);
+    opacity: 0;
+  }
+}
+
+@keyframes leafFloat3 {
+  0% {
+    top: -70px;
+    transform: translateX(0px) rotate(20deg) rotateY(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.75;
+  }
+  30% {
+    transform: translateX(35px) rotate(70deg) rotateY(180deg);
+  }
+  60% {
+    transform: translateX(-40px) rotate(-15deg) rotateY(360deg);
+  }
+  85% {
+    transform: translateX(20px) rotate(45deg) rotateY(480deg);
+    opacity: 0.7;
+  }
+  100% {
+    top: 106vh;
+    transform: translateX(0px) rotate(110deg) rotateY(600deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf-particle {
+    display: none !important;
+  }
+}
+
+/* 3D Medical Glass Orb Simulation */
+.orb-container {
+  perspective: 1200px;
+}
+
+.medical-orb {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(215, 241, 229, 0.75) 30%, rgba(182, 233, 209, 0.45) 55%, rgba(245, 213, 227, 0.5) 80%, rgba(32, 155, 115, 0.6) 100%);
+  box-shadow:
+    inset -12px -16px 30px rgba(22, 77, 60, 0.25),
+    inset 12px 14px 24px rgba(255, 255, 255, 0.9),
+    0 30px 60px -15px rgba(22, 77, 60, 0.2),
+    0 10px 30px -5px rgba(216, 121, 161, 0.15);
+  animation: orbFloat 6s ease-in-out infinite alternate;
+  position: relative;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@keyframes orbFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) rotate(4deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(-6px) rotate(-3deg) scale(0.99);
+  }
+}
+
+.orb-ring {
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(50, 181, 139, 0.35);
+  animation: ringRotate 24s linear infinite;
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FCFBF8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(117, 132, 127, 0.25);
+  border-radius: 9999px;
+  border: 2px solid #FCFBF8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(32, 155, 115, 0.55);
 }
