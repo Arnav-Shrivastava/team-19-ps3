@@ -9,7 +9,7 @@ type Message = { role: "user" | "model"; text: string; steps?: AgentStep[] };
 const SAMPLE_PROMPTS = [
   "I have a skin rash, book me with a doctor on Friday morning.",
   "Move my appointment to the next free slot.",
-  "Which Tamil-speaking doctors are free tomorrow?",
+  "Which Tamilspeaking doctors are free tomorrow?",
 ];
 
 export default function AgentChat({ onDataChanged }: { onDataChanged?: () => void }) {
